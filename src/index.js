@@ -8,6 +8,8 @@ import { withStyles } from '@material-ui/core/styles'
 import ImgDialog from './ImgDialog'
 import getCroppedImg from './cropImage'
 import { styles } from './styles'
+import Compressor from 'compressorjs'
+import Loader from './Loader'
 
 const Demo = ({ classes }) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 })
@@ -21,7 +23,8 @@ const Demo = ({ classes }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [themeColor, setThemeColor] = useState('#e62466')
   const [fontColor, setFontColor] = useState('#ffffff')
-
+  const [compressionRatio, setCompressionRatio] = useState()
+  const [loading, setLoading] = useState(true)
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
     setCroppedAreaPixels(croppedAreaPixels)
   }, [])
@@ -42,19 +45,53 @@ const Demo = ({ classes }) => {
   const onClose = useCallback(() => {
     setCroppedImage(null)
   }, [])
-
   const onSelectImage = (e, key, data) => {
     if (!key) {
       if (e.target.files && e.target.files.length > 0) {
         setMultipleImages([...e.target.files])
-        const reader = new FileReader()
-        reader.addEventListener('load', () => setCurrentImage(reader.result))
-        reader.readAsDataURL(e.target.files[0])
+
+        new Compressor(e.target.files[0], {
+          quality: 0.2,
+          success(result) {
+            const reader = new FileReader()
+            reader.addEventListener('load', () => {
+              setCurrentImage(reader.result)
+              console.log('reader', reader.result)
+            })
+            reader.readAsDataURL(result)
+          },
+          error(err) {
+            console.log(err.message)
+          },
+        })
+
+        // const reader = new FileReader()
+        // reader.addEventListener('load', () => {
+        //   setCurrentImage(reader.result)
+        //   // console.log('reader', reader.result)
+        // })
+        // // reader.readAsDataURL(imgCompressor.result)
+        // reader.readAsDataURL(e.target.files[0])
       }
     } else {
-      const reader = new FileReader()
-      reader.addEventListener('load', () => setCurrentImage(reader.result))
-      reader.readAsDataURL(data)
+      new Compressor(data, {
+        quality: compressionRatio / 100,
+        success(result) {
+          const reader = new FileReader()
+          reader.addEventListener('load', () => {
+            setCurrentImage(reader.result)
+            console.log('reader', reader.result)
+          })
+          reader.readAsDataURL(result)
+        },
+        error(err) {
+          console.log(err.message)
+        },
+      })
+
+      // const reader = new FileReader()
+      // reader.addEventListener('load', () => setCurrentImage(reader.result))
+      // reader.readAsDataURL(data)
     }
   }
 
@@ -76,7 +113,7 @@ const Demo = ({ classes }) => {
   }
 
   const handleNumberInput = (value) => {
-    var regex = new RegExp('^[^0-90-9]*$')
+    var regex = new RegExp('^[^1-9]*$')
     var key = String.fromCharCode(
       !value.charCode ? value.which : value.charCode
     )
@@ -85,13 +122,23 @@ const Demo = ({ classes }) => {
       return false
     }
   }
-console.log(window.location)
+
   useEffect(() => {
+    setTimeout(() => {
+      setLoading(false)
+    }, 1500)
     if (localStorage.getItem('inputAspectRatio')) {
       let tempAspect = JSON.parse(localStorage.getItem('inputAspectRatio'))
       setInputAspectRatio(tempAspect)
     } else {
       localStorage.setItem('inputAspectRatio', JSON.stringify({ x: 1, y: 1 }))
+    }
+
+    if (localStorage.getItem('compressionRatio')) {
+      let tempCompress = JSON.parse(localStorage.getItem('compressionRatio'))
+      setCompressionRatio(tempCompress)
+    } else {
+      localStorage.setItem('compressionRatio', JSON.stringify(60))
     }
 
     if (window.location.href.split('=').length > 1) {
@@ -128,8 +175,20 @@ console.log(window.location)
       }
     }
   }, [])
-
-  return (
+  console.log(compressionRatio)
+  return loading ? (
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Loader color="default" />
+    </div>
+  ) : (
     <div>
       <div
         style={{
@@ -158,21 +217,58 @@ console.log(window.location)
             height: '20px',
             alignItems: 'center',
             justifyContent: 'space-between',
-            width: '300px',
+            width: '430px',
             marginLeft: '50px',
           }}
         >
+          <div
+            style={{
+              display: 'flex',
+              height: '20px',
+              alignItems: 'center',
+              justifyContent: 'space-evenly',
+              width: '150px',
+            }}
+          >
+            <h5>Quality:</h5>
+            <select
+              id="compression"
+              style={{ height: '30px' }}
+              onChange={(e) => {
+                setCompressionRatio(e.target.value)
+                localStorage.setItem(
+                  'compressionRatio',
+                  JSON.stringify(e.target.value)
+                )
+              }}
+              value={compressionRatio}
+            >
+              <option value="10">10 %</option>
+              <option value="20">20 %</option>
+              <option value="30">30 %</option>
+              <option value="40">40 %</option>
+              <option value="50">50 %</option>
+              <option value="60">60 %</option>
+              <option value="70">70 %</option>
+              <option value="80">80 %</option>
+              <option value="90">90 %</option>
+            </select>
+          </div>
           <h5>aspect ratio :</h5>
           <p>x</p>
           <input
             type="text"
             min={1}
             max={100}
-            style={{ width: '50px' }}
+            maxLength={3}
+            style={{ width: '50px', height: '25px', paddingLeft: '5px' }}
             value={inputAspectRatio.x || 1}
             onKeyDown={(e) => handleNumberInput(e)}
             onChange={(e) => {
-              setInputAspectRatio({ ...inputAspectRatio, x: e.target.value })
+              setInputAspectRatio({
+                ...inputAspectRatio,
+                x: e.target.value,
+              })
               localStorage.setItem(
                 'inputAspectRatio',
                 JSON.stringify({ ...inputAspectRatio, x: e.target.value })
@@ -184,11 +280,15 @@ console.log(window.location)
             type="text"
             min={1}
             max={100}
-            style={{ width: '50px' }}
+            maxLength={3}
+            style={{ width: '50px', height: '25px', paddingLeftL: '5px' }}
             value={inputAspectRatio.y || 1}
             onKeyDown={(e) => handleNumberInput(e)}
             onChange={(e) => {
-              setInputAspectRatio({ ...inputAspectRatio, y: e.target.value })
+              setInputAspectRatio({
+                ...inputAspectRatio,
+                y: e.target.value,
+              })
               localStorage.setItem(
                 'inputAspectRatio',
                 JSON.stringify({ ...inputAspectRatio, y: e.target.value })
@@ -197,20 +297,43 @@ console.log(window.location)
           ></input>
         </div>
         <div>
-          <button
+          <Button
+            variant="contained"
+            // color={themeColor}
+            classes={{ root: classes.cropButton }}
+            style={{
+              backgroundColor: currentImageIndex === 0 ? 'gray' : themeColor,
+              color: 'white',
+              fontWeight: 'bold',
+              fontshadow: `0px 0px 5px ${fontColor}`,
+              stroke: '5px black',
+              marginLeft: '50px',
+            }}
             onClick={() => previousImage()}
-            style={{ marginLeft: '50px' }}
             disabled={currentImageIndex === 0}
           >
             previous image
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="contained"
+            // color={themeColor}
+            classes={{ root: classes.cropButton }}
+            style={{
+              backgroundColor:
+                multipleImages.length - 1 <= currentImageIndex
+                  ? 'gray'
+                  : themeColor,
+              color: 'white',
+              fontWeight: 'bold',
+              fontshadow: `0px 0px 5px ${fontColor}`,
+              stroke: '5px black',
+              marginLeft: '50px',
+            }}
             onClick={() => nextImage()}
-            style={{ marginLeft: '50px' }}
             disabled={multipleImages.length - 1 <= currentImageIndex}
           >
             next image
-          </button>
+          </Button>
         </div>
       </div>
       <div className={classes.cropContainer} style={{ height: '80vh' }}>

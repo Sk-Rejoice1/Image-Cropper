@@ -7,6 +7,7 @@ import IconButton from '@material-ui/core/IconButton'
 import Typography from '@material-ui/core/Typography'
 import CloseIcon from '@material-ui/icons/Close'
 import Slide from '@material-ui/core/Slide'
+import { Button } from '@material-ui/core'
 
 const styles = {
   appBar: {
@@ -35,7 +36,7 @@ function Transition(props) {
 
 class ImgDialog extends React.Component {
   state = {
-    open: false,
+    open: true,
   }
 
   handleClickOpen = () => {
@@ -54,9 +55,13 @@ class ImgDialog extends React.Component {
         onClose={this.props.onClose}
         TransitionComponent={Transition}
       >
-        <AppBar className={classes.appBar} style={{
-          backgroundColor: this.props.themeColor,
-        }}>
+        <AppBar
+          className={classes.appBar}
+          style={{
+            backgroundColor: 'rgb(128 126 126 / 20%)',
+            color: 'black',
+          }}
+        >
           <Toolbar>
             <IconButton
               color="inherit"
@@ -77,11 +82,7 @@ class ImgDialog extends React.Component {
                 download={true}
                 style={{
                   textDecoration: 'none',
-                  color: 'white',
-                  backgroundColor: 'rgba(20,20,20,0.5)',
                   textAlign: 'center',
-                  padding: '5px 10px',
-                  borderRadius: '20px',
                 }}
                 onClick={(e) => {
                   setTimeout(() => {
@@ -90,7 +91,19 @@ class ImgDialog extends React.Component {
                   }, 250)
                 }}
               >
-                download
+                <Button
+                  variant="contained"
+                  style={{
+                    backgroundColor: this.props.themeColor,
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontshadow: `0px 0px 5px ${this.props.fontColor}`,
+                    stroke: '5px black',
+                    marginLeft: '50px',
+                  }}
+                >
+                  download
+                </Button>
               </a>
             </Typography>
           </Toolbar>
