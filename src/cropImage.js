@@ -50,17 +50,16 @@ export default async function getCroppedImg(
     image.height,
     rotation
   )
-
+  console.log('bBoxWidth', bBoxWidth, 'bBoxHeight', bBoxHeight, pixelCrop)
   // set canvas size to match the bounding box
   canvas.width = bBoxWidth
   canvas.height = bBoxHeight
 
   // translate canvas context to a central location to allow rotating and flipping around the center
-  ctx.translate(bBoxWidth / 2, bBoxHeight / 2)
+  // ctx.translate(bBoxWidth / 2, bBoxHeight / 2)
   ctx.rotate(rotRad)
-  ctx.scale(flip.horizontal ? -1 : 1, flip.vertical ? -1 : 1)
-  ctx.translate(-image.width / 2, -image.height / 2)
-
+  // ctx.scale(flip.horizontal ? -1 : 1, flip.vertical ? -1 : 1)
+  // ctx.translate(-image.width / 2, -image.height / 2)
   // draw rotated image
   ctx.drawImage(image, 0, 0)
 
@@ -72,7 +71,7 @@ export default async function getCroppedImg(
     pixelCrop.width,
     pixelCrop.height
   )
-
+  console.log('result', 'width:', data.width, 'height:', data.height)
   // set canvas width to final desired crop size - this will clear existing context
   canvas.width = pixelCrop.width
   canvas.height = pixelCrop.height

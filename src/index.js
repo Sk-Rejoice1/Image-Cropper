@@ -13,19 +13,25 @@ import Loader from './Loader'
 
 const Demo = ({ classes }) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 })
+  // const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [rotation, setRotation] = useState(0)
-  const [zoom, setZoom] = useState(1)
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null)
+  const [zoom, setZoom] = useState(2.38)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(inputSize)
   const [croppedImage, setCroppedImage] = useState(null)
   const [currentImage, setCurrentImage] = useState('')
   const [multipleImages, setMultipleImages] = useState([])
   const [inputAspectRatio, setInputAspectRatio] = useState({ x: 1, y: 1 })
+  const [inputSize, setInputSize] = useState({ width: 200, height: 200 })
+  const [tempInputSize, setTempInputSize] = useState({
+    width: 200,
+    height: 200,
+  })
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [themeColor, setThemeColor] = useState('#e62466')
   const [fontColor, setFontColor] = useState('#ffffff')
   const [compressionRatio, setCompressionRatio] = useState()
-  const [loading, setLoading] = useState(true)
-  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+  const [loading, setLoading] = useState(false)
+  const onCropComplete = useCallback((inputSize, croppedAreaPixels) => {
     setCroppedAreaPixels(croppedAreaPixels)
   }, [])
 
@@ -45,18 +51,39 @@ const Demo = ({ classes }) => {
   const onClose = useCallback(() => {
     setCroppedImage(null)
   }, [])
-  const onSelectImage = (e, key, data) => {
+
+  console.log('zoom', zoom)
+  console.log('input', inputSize)
+
+  const imageDimensions = (file) => {
+    const img = new Image()
+    // the following handler will fire after a successful loading of the image
+    img.onload = async () => {
+      console.log('img', img)
+      const { naturalWidth: width, naturalHeight: height } = img
+      console.log('width', width, 'height', height)
+      //  { width, height }
+    }
+    // and this handler will fire if there was an error with the image (like if it's not really an image or a corrupted one)
+    img.onerror = () => {
+      console.log('There was some problem with the image.')
+    }
+    img.src = URL.createObjectURL(file)
+  }
+
+  const onSelectImage = async (e, key, data) => {
     if (!key) {
       if (e.target.files && e.target.files.length > 0) {
         setMultipleImages([...e.target.files])
-
+        imageDimensions(e.target.files[0])
         new Compressor(e.target.files[0], {
-          quality: 0.2,
+          // quality: 100,
+          resize: 'contain',
+          // quality: compressionRatio / 100,
           success(result) {
             const reader = new FileReader()
             reader.addEventListener('load', () => {
               setCurrentImage(reader.result)
-              console.log('reader', reader.result)
             })
             reader.readAsDataURL(result)
           },
@@ -64,7 +91,6 @@ const Demo = ({ classes }) => {
             console.log(err.message)
           },
         })
-
         // const reader = new FileReader()
         // reader.addEventListener('load', () => {
         //   setCurrentImage(reader.result)
@@ -74,13 +100,13 @@ const Demo = ({ classes }) => {
         // reader.readAsDataURL(e.target.files[0])
       }
     } else {
+      // console.log('~~~data', data)
       new Compressor(data, {
         quality: compressionRatio / 100,
         success(result) {
           const reader = new FileReader()
           reader.addEventListener('load', () => {
             setCurrentImage(reader.result)
-            console.log('reader', reader.result)
           })
           reader.readAsDataURL(result)
         },
@@ -113,7 +139,7 @@ const Demo = ({ classes }) => {
   }
 
   const handleNumberInput = (value) => {
-    var regex = new RegExp('^[^1-9]*$')
+    var regex = new RegExp('^[^0-9]*$')
     var key = String.fromCharCode(
       !value.charCode ? value.which : value.charCode
     )
@@ -124,15 +150,27 @@ const Demo = ({ classes }) => {
   }
 
   useEffect(() => {
-    setTimeout(() => {
-      setLoading(false)
-    }, 1500)
-    if (localStorage.getItem('inputAspectRatio')) {
-      let tempAspect = JSON.parse(localStorage.getItem('inputAspectRatio'))
-      setInputAspectRatio(tempAspect)
-    } else {
-      localStorage.setItem('inputAspectRatio', JSON.stringify({ x: 1, y: 1 }))
-    }
+    // setTimeout(() => {
+    //   setLoading(false)
+    // }, 100)
+    // if (localStorage.getItem('inputAspectRatio')) {
+    //   let tempAspect = JSON.parse(localStorage.getItem('inputAspectRatio'))
+    //   setInputAspectRatio(tempAspect)
+    // } else {
+    //   localStorage.setItem('inputAspectRatio', JSON.stringify({ x: 1, y: 1 }))
+    // }
+
+    // if (localStorage.getItem('inputSize')) {
+    //   let tempSize = JSON.parse(localStorage.getItem('inputSize'))
+    //   console.log('tempSize++++++++++', tempSize)
+    //   // setInputSize(tempSize)
+    //   // setTempInputSize(tempSize)
+    // } else {
+    //   localStorage.setItem(
+    //     'inputSize',
+    //     JSON.stringify({ width: 300, height: 500 })
+    //   )
+    // }
 
     if (localStorage.getItem('compressionRatio')) {
       let tempCompress = JSON.parse(localStorage.getItem('compressionRatio'))
@@ -175,7 +213,7 @@ const Demo = ({ classes }) => {
       }
     }
   }, [])
-  console.log(compressionRatio)
+
   return loading ? (
     <div
       style={{
@@ -216,8 +254,8 @@ const Demo = ({ classes }) => {
             display: 'flex',
             height: '20px',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            width: '430px',
+            justifyContent: 'space-evenly',
+            width: '630px',
             marginLeft: '50px',
           }}
         >
@@ -254,7 +292,7 @@ const Demo = ({ classes }) => {
               <option value="90">90 %</option>
             </select>
           </div>
-          <h5>aspect ratio :</h5>
+          {/* <h5>aspect ratio :</h5>
           <p>x</p>
           <input
             type="text"
@@ -294,7 +332,90 @@ const Demo = ({ classes }) => {
                 JSON.stringify({ ...inputAspectRatio, y: e.target.value })
               )
             }}
-          ></input>
+          ></input> */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-evenly',
+              width: '450px',
+            }}
+          >
+            <h5>Crop size :</h5>
+            <p>width</p>
+            <input
+              type="number"
+              // min={1}
+              // max={10000}
+              // maxLength={5}
+              style={{ width: '50px', height: '25px', paddingLeft: '5px' }}
+              value={tempInputSize.width || 1}
+              // onKeyDown={(e) => handleNumberInput(e)}
+              onChange={(e) => {
+                setTempInputSize({
+                  ...tempInputSize,
+                  width: +e.target.value,
+                })
+                // setInputSize({
+                //   ...inputSize,
+                //   width: e.target.value,
+                // })
+                // localStorage.setItem(
+                //   'inputSize',
+                //   JSON.stringify({ ...inputSize, width: e.target.value })
+                // )
+              }}
+            ></input>
+            <p>height</p>
+            <input
+              type="number"
+              // min={1}
+              // max={10000}
+              // maxLength={5}
+              style={{ width: '50px', height: '25px', paddingLeftL: '5px' }}
+              value={tempInputSize.height || 1}
+              // onKeyDown={(e) => handleNumberInput(e)}
+              onChange={(e) => {
+                setTempInputSize({
+                  ...tempInputSize,
+                  height: +e.target.value,
+                })
+                // setInputSize({
+                //   ...inputSize,
+                //   height: e.target.value,
+                // })
+                // localStorage.setItem(
+                //   'inputSize',
+                //   JSON.stringify({ ...inputSize, height: e.target.value })
+                // )
+              }}
+            ></input>
+            <Button
+              variant="contained"
+              // color={themeColor}
+              classes={{ root: classes.cropButton }}
+              style={{
+                backgroundColor:
+                  !tempInputSize.width || !tempInputSize.height
+                    ? 'gray'
+                    : themeColor,
+                color: 'white',
+                fontWeight: 'bold',
+                fontshadow: `0px 0px 5px ${fontColor}`,
+                stroke: '5px black',
+                marginLeft: '20px',
+              }}
+              onClick={() => {
+                setInputSize({
+                  ...tempInputSize,
+                })
+                localStorage.setItem('inputSize', JSON.stringify(tempInputSize))
+              }}
+              disabled={!tempInputSize.width || !tempInputSize.height}
+            >
+              Set size
+            </Button>
+          </div>
         </div>
         <div>
           <Button
@@ -307,7 +428,7 @@ const Demo = ({ classes }) => {
               fontWeight: 'bold',
               fontshadow: `0px 0px 5px ${fontColor}`,
               stroke: '5px black',
-              marginLeft: '50px',
+              marginLeft: '25px',
             }}
             onClick={() => previousImage()}
             disabled={currentImageIndex === 0}
@@ -327,7 +448,7 @@ const Demo = ({ classes }) => {
               fontWeight: 'bold',
               fontshadow: `0px 0px 5px ${fontColor}`,
               stroke: '5px black',
-              marginLeft: '50px',
+              marginLeft: '25px',
             }}
             onClick={() => nextImage()}
             disabled={multipleImages.length - 1 <= currentImageIndex}
@@ -336,16 +457,24 @@ const Demo = ({ classes }) => {
           </Button>
         </div>
       </div>
-      <div className={classes.cropContainer} style={{ height: '80vh' }}>
+      <div
+        className={classes.cropContainer}
+        style={{ height: '80vh', display: 'block' }}
+      >
         <Cropper
           image={currentImage}
           crop={crop}
           rotation={rotation}
+          minZoom="1"
           zoom={zoom}
-          aspect={inputAspectRatio.x / inputAspectRatio.y}
+          showGrid={true}
+          // aspect={inputAspectRatio.x / inputAspectRatio.y}
+          objectFit="auto-cover"
+          cropSize={inputSize}
           onCropChange={setCrop}
           onRotationChange={setRotation}
           onCropComplete={onCropComplete}
+          onCropAreaChange={onCropComplete}
           onZoomChange={setZoom}
         />
       </div>
@@ -360,8 +489,8 @@ const Demo = ({ classes }) => {
           <Slider
             value={zoom}
             min={1}
-            max={3}
-            step={0.1}
+            max={10}
+            step={0.01}
             aria-labelledby="Zoom"
             classes={{ root: classes.slider }}
             onChange={(e, zoom) => setZoom(zoom)}
