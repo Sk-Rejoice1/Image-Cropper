@@ -32,6 +32,7 @@ export default async function getCroppedImg(
   imageSrc,
   pixelCrop,
   rotation = 0,
+  inputSize,
   flip = { horizontal: false, vertical: false }
 ) {
   const image = await createImage(imageSrc)
@@ -50,7 +51,16 @@ export default async function getCroppedImg(
     image.height,
     rotation
   )
-  console.log('bBoxWidth', bBoxWidth, 'bBoxHeight', bBoxHeight, pixelCrop)
+  // console.log(
+  //   'bBoxWidth',
+  //   bBoxWidth,
+  //   'bBoxHeight',
+  //   bBoxHeight,
+  //   'pixelCrop',
+  //   pixelCrop,
+  //   'inputSize',
+  //   inputSize
+  // )
   // set canvas size to match the bounding box
   canvas.width = bBoxWidth
   canvas.height = bBoxHeight
@@ -70,11 +80,14 @@ export default async function getCroppedImg(
     pixelCrop.y,
     pixelCrop.width,
     pixelCrop.height
+    // inputSize.width,
+    // inputSize.height
   )
-  console.log('result', 'width:', data.width, 'height:', data.height)
   // set canvas width to final desired crop size - this will clear existing context
-  canvas.width = pixelCrop.width
-  canvas.height = pixelCrop.height
+  // canvas.width = pixelCrop.width
+  // canvas.height = pixelCrop.height
+  canvas.width = inputSize.width
+  canvas.height = inputSize.height
 
   // paste generated rotate image at the top left corner
   ctx.putImageData(data, 0, 0)

@@ -23,12 +23,51 @@ const styles = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
+    width: `${
+      localStorage.getItem('inputSize')
+        ? JSON.parse(localStorage.getItem('inputSize')).width
+        : '500'
+    }px`,
+    height: `${
+      localStorage.getItem('inputSize')
+        ? JSON.parse(localStorage.getItem('inputSize')).height
+        : '700'
+    }px`,
+    maxWidth: `${
+      localStorage.getItem('inputSize')
+        ? JSON.parse(localStorage.getItem('inputSize')).width
+        : '500'
+    }px`,
+    maxHeight: `${
+      localStorage.getItem('inputSize')
+        ? JSON.parse(localStorage.getItem('inputSize')).height
+        : '700'
+    }px`,
   },
   img: {
-    maxWidth: '100%',
-    maxHeight: '100%',
+    width: `${
+      localStorage.getItem('inputSize')
+        ? JSON.parse(localStorage.getItem('inputSize')).width
+        : '500'
+    }px`,
+    height: `${
+      localStorage.getItem('inputSize')
+        ? JSON.parse(localStorage.getItem('inputSize')).height
+        : '700'
+    }px`,
+    maxWidth: `${
+      localStorage.getItem('inputSize')
+        ? JSON.parse(localStorage.getItem('inputSize')).width
+        : '500'
+    }px`,
+    maxHeight: `${
+      localStorage.getItem('inputSize')
+        ? JSON.parse(localStorage.getItem('inputSize')).height
+        : '700'
+    }px`,
   },
 }
+// console.log(localStorage.getItem('inputSize'));
 
 function Transition(props) {
   return <Slide direction="up" {...props} />
@@ -46,6 +85,7 @@ class ImgDialog extends React.Component {
   handleClose = () => {
     this.setState({ open: false })
   }
+
   render() {
     const { classes } = this.props
     return (
@@ -60,6 +100,9 @@ class ImgDialog extends React.Component {
           style={{
             backgroundColor: 'rgb(128 126 126 / 20%)',
             color: 'black',
+            width: `4040px`,
+            position: 'sticky',
+            top: 0,
           }}
         >
           <Toolbar>
@@ -87,6 +130,7 @@ class ImgDialog extends React.Component {
                 onClick={(e) => {
                   setTimeout(() => {
                     this.props.onClose()
+                    this.props.setZoom(1)
                     this.props.nextImage(e)
                   }, 250)
                 }}
