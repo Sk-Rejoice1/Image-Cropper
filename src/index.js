@@ -26,14 +26,14 @@ const Demo = ({ classes }) => {
   const [multipleImages, setMultipleImages] = useState([])
   const [inputAspectRatio, setInputAspectRatio] = useState({ x: 1, y: 1 })
   const [inputSize, setInputSize] = useState({
-    width: 200,
-    height: 200,
+    width: 500,
+    height: 700,
     x: 0,
     y: 0,
   })
   const [tempInputSize, setTempInputSize] = useState({
-    width: 200,
-    height: 200,
+    width: 500,
+    height: 700,
     x: 0,
     y: 0,
   })
@@ -586,6 +586,9 @@ const Demo = ({ classes }) => {
                     'inputSize',
                     JSON.stringify(tempInputSize)
                   )
+                  setTimeout(() => {
+                    location.reload()
+                  }, 100)
                 }}
                 disabled={!tempInputSize.width || !tempInputSize.height}
               >
@@ -682,6 +685,7 @@ const Demo = ({ classes }) => {
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  transform: `scale(${relativeBtnScale})`,
                 }}
               >
                 <p style={{ margin: '0' }}>Zoom</p>
@@ -712,6 +716,7 @@ const Demo = ({ classes }) => {
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  transform: `scale(${relativeBtnScale})`,
                 }}
               >
                 <p style={{ margin: '0' }}>Rotation</p>
